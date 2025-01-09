@@ -103,12 +103,12 @@ def compare_hash_tables(
     return len(common_tokens), common_tokens
 
 
-# 6. Plagiarism Detection Engine
+# 6. Plagiarism Detection Engine (with Plagiarism Rate)
 def detect_plagiarism(submission: str, repository: List[str]) -> List[Dict[str, Any]]:
     """
     Detects plagiarism indicators by comparing a submission against a list of repository documents.
+    Also calculates a plagiarism rate for each document.
     """
-    # Handle empty inputs
     if not submission.strip():
         return []
 
@@ -122,11 +122,16 @@ def detect_plagiarism(submission: str, repository: List[str]) -> List[Dict[str, 
         edit_dist = edit_distance(submission, doc)
         lcs = longest_common_substring(submission, doc)
         ngram_sim = ngram_similarity(submission, doc)
-        
+
         submission_hash = tokenize_and_hash(submission)
         doc_hash = tokenize_and_hash(doc)
-        
+
         common_count, common_tokens = compare_hash_tables(submission_hash, doc_hash)
+
+        # Calculate plagiarism rate as a weighted average of similarities
+        plagiarism_rate = (
+            (ngram_sim * 0.5) + (len(common_tokens) / max(len(submission.split()), 1) * 50)
+        )
 
         results.append({
             "doc_index": doc_index,
@@ -134,16 +139,26 @@ def detect_plagiarism(submission: str, repository: List[str]) -> List[Dict[str, 
             "longest_common_substring": lcs,
             "ngram_similarity": ngram_sim,
             "common_count": common_count,
-            "common_tokens": common_tokens
+            "common_tokens": common_tokens,
+            "plagiarism_rate": plagiarism_rate,
         })
     return results
 
 
-# 7. Enhanced Report Visualization
+# 7. Enhanced Report Visualization (with Overall Plagiarism Rate)
 def visualize_results(results: List[Dict[str, Any]], repository: List[str]) -> None:
     """
-    Displays the results of the plagiarism detection using Streamlit and matplotlib.
+    Displays the results of the plagiarism detection using Streamlit and matplotlib,
+    including an overall plagiarism rate.
     """
+    if not results:
+        st.warning("No valid results to display.")
+        return
+
+    # Calculate overall plagiarism rate
+    overall_rate = sum(result['plagiarism_rate'] for result in results) / len(results)
+    st.header(f"Overall Plagiarism Rate: {overall_rate:.2f}%")
+
     for result in results:
         st.subheader(f"Document {result['doc_index']}")
         st.write(f"Edit Distance: {result['edit_distance']}")
@@ -151,21 +166,24 @@ def visualize_results(results: List[Dict[str, Any]], repository: List[str]) -> N
         st.write(f"Longest Common Substring: '{result['longest_common_substring']}'")
         st.write(f"Common Token Count: {result['common_count']}")
         st.write(f"Common Tokens: {', '.join(result['common_tokens'])}")
+        st.write(f"Plagiarism Rate: {result['plagiarism_rate']:.2f}%")
 
-        # Add a bar chart to visualize similarity metrics
+        # Bar chart visualization for this document
         metrics = [
             result['edit_distance'], 
             result['ngram_similarity'], 
-            result['common_count']
+            result['common_count'], 
+            result['plagiarism_rate']
         ]
         labels = [
             "Edit Distance (lower is better)", 
             "N-Gram Similarity (%)", 
-            "Common Token Count"
+            "Common Token Count", 
+            "Plagiarism Rate (%)"
         ]
 
         fig, ax = plt.subplots()
-        ax.barh(labels, metrics, color=["red", "green", "blue"])
+        ax.barh(labels, metrics, color=["red", "green", "blue", "purple"])
         ax.set_xlabel("Values")
         ax.set_title(f"Metrics for Document {result['doc_index']}")
         st.pyplot(fig)
