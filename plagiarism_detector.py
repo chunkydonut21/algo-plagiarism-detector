@@ -2,6 +2,7 @@ import re
 from collections import defaultdict
 import streamlit as st
 import matplotlib.pyplot as plt
+from PyPDF2 import PdfReader
 
 # 1. Preprocessing and Normalization
 def preprocess_text(text):
@@ -117,17 +118,46 @@ def visualize_results(results, repository):
         st.pyplot(fig)
 
 # 8. Streamlit UI for Plagiarism Detection
+def read_file(file):
+    if file.name.endswith('.txt'):
+        return file.read().decode("utf-8")
+    elif file.name.endswith('.pdf'):
+        pdf_reader = PdfReader(file)
+        text = ""
+        for page in pdf_reader.pages:
+            text += page.extract_text()
+        return text
+    else:
+        return ""
+
 def plagiarism_ui():
     st.title("Plagiarism Detection System")
 
-    st.sidebar.header("Upload Files")
-    submission_file = st.sidebar.text_area("Enter the Submission Text")
-    repository_files = st.sidebar.text_area("Enter Repository Texts (Separate by New Line)").split('\n')
+    st.sidebar.header("Input Options")
+    submission_text = st.sidebar.text_area("Enter the Submission Text")
+    submission_file = st.sidebar.file_uploader("Or Upload a Submission File", type=["txt", "pdf"])
+
+    repository_files = st.sidebar.file_uploader("Upload Repository Files (Multiple)", type=["txt", "pdf"], accept_multiple_files=True)
+    repository_texts = st.sidebar.text_area("Or Enter Repository Texts (Separate by New Line)").split('\n')
+
+    if submission_file:
+        submission_text = read_file(submission_file)
+
+    repository_contents = []
+    if repository_files:
+        for file in repository_files:
+            repository_contents.append(read_file(file))
+
+    if repository_texts:
+        repository_contents.extend(repository_texts)
 
     if st.sidebar.button("Analyze"):
-        results = detect_plagiarism(submission_file, repository_files)
-        st.header("Results")
-        visualize_results(results, repository_files)
+        if submission_text and repository_contents:
+            results = detect_plagiarism(submission_text, repository_contents)
+            st.header("Results")
+            visualize_results(results, repository_contents)
+        else:
+            st.error("Please provide both submission text and repository files/texts.")
 
 # Example Usage
 if __name__ == "__main__":
