@@ -3,6 +3,9 @@
 ## Overview
 This project is a **Plagiarism Detection System** built with Python, leveraging algorithms for text preprocessing, similarity analysis, and visualization. The tool provides an intuitive user interface using **Streamlit**, enabling users to upload or input texts and repository documents for comparison. The system highlights similarities between texts using advanced metrics and visualizations.
 
+You can access the deployed application here:  
+👉 [Plagiarism Detection System](https://plagiarism-detector-ef1n.onrender.com/)
+
 ---
 
 ## Features
