@@ -115,10 +115,6 @@ def visualize_results(results, repository_files):
 
     # Display overall plagiarism rate
     st.header("Plagiarism Report")
-    st.markdown(
-        f"<h3 style='color:{overall_color};'>Overall Plagiarism Rate: {overall_similarity:.2f}% ({overall_status})</h3>",
-        unsafe_allow_html=True
-    )
 
     # Visualize individual document comparisons
     for result, repo_file in zip(results, repository_files):
