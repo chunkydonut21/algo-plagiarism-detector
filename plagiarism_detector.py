@@ -11,10 +11,6 @@ def preprocess_text(text):
     text = re.sub(r'[^a-zA-Z0-9 ]', '', text)  # Remove special characters
     text = text.lower()  # Convert to lowercase
     return text
-def calculate_overall_similarity(results):
-    """Calculate the average n-gram similarity percentage across all documents."""
-    similarities = [result['ngram_similarity'] for result in results]
-    return sum(similarities) / len(similarities) if similarities else 0
 
 def plagiarism_status(overall_rate):
     """Determine the plagiarism status and color based on the rate."""
